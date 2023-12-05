@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artworks Lookup</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/compromise"></script>
+</head>
+
+<body>
+    <svg xmlns="http://www.w3.org/2000/svg">
+
+        <a href="svg1.txt">
+        </a>
+
+
+        <h1>Artworks Lookup</h1>
+        <div>
+            <label for="artistInput">Artist:</label>
+            <select id="artistInput" class="artist-select" style="width: 100%">
+            </select>
+        </div>
+        <div>
+            <label for="themeSelect">Themes:</label>
+            <select id="themeSelect" class="theme-select" style="width: 100%">
+                <option value="ocean">Ocean</option>
+                <option value="sun">Sun</option>
+            </select>
+
+        </div>
+        <div id="artworksContainer"></div>
+        <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+
+
+
+        <script>
+            let artistData;
+            let oceanRelatedTitles = [];
+            let sunRelatedTitles = [];
+
+            // Load the CSV data for artists
+            d3.csv("final_table.csv").then(function (data) {
+                artistData = data;
+                populateArtistDropdown(artistData);
+                analyzeThemes(data);
+            });
+
+            // Function to populate the artist dropdown with unique names
+            function populateArtistDropdown(data) {
+                const uniqueArtists = getUniqueArtists(data);
+
+                $(".artist-select").select2({
+                    data: uniqueArtists,
+                    placeholder: "Select or type an artist",
+                    allowClear: true,
+                });
+
+                // Event listener to update input field and display artworks
+                $(".artist-select").on("select2:select", function (e) {
+                    const selectedArtist = e.params.data.id;
+                    const artist = artistData.find(function (d) {
+                        return d.attribution === selectedArtist;
+                    });
+
+                    if (artist) {
+                        displayArtworks(artist);
+                    } else {
+                        clearArtworks();
+                    }
+                });
+
+                // Event listener for clearing selection
+                $(".artist-select").on("select2:unselect", function (e) {
+                    clearArtworks();
+                });
+            }
+
+            // Event listener to update input field and display artworks
+            d3.select("#artistInput").on("input", function () {
+                const inputText = this.value.toLowerCase();
+                const selectedArtist = artistData.find(function (d) {
+                    return d.attribution.toLowerCase().includes(inputText);
+                });
+
+                if (selectedArtist) {
+                    displayArtworks(selectedArtist);
+                } else {
+                    clearArtworks();
+                }
+            });
+
+            // Function to display artworks by the selected artist
+            function displayArtworks(artist) {
+                const artworksContainer = d3.select("#artworksContainer");
+                artworksContainer.html(""); // Clear previous content
+
+                const artworks = artistData.filter(function (d) {
+                    return d.attribution === artist.attribution;
+                });
+
+                const div = artworksContainer
+                    .append("div")
+                    .style("display", "flex"); // Add a flex container for images
+
+                const images = div
+                    .selectAll("img")
+                    .data(artworks)
+                    .enter()
+                    .append("img")
+                    .attr("src", function (d) {
+                        return d.iiifthumburl;
+                    })
+                    .attr("alt", function (d) {
+                        return d.title;
+                    })
+                    .on("click", function (d) {
+                        alert("Image URL: " + d.iiifthumburl);
+                    });
+
+                // Apply the 'no-location' class with reduced opacity
+                images.classed("no-location", function (d) {
+                    return d.locationid === "NA";
+                });
+
+                // Event listener for images with 'no-location' class
+                images.filter(".no-location")
+                    .style("opacity", 0.3);
+            }
+
+            // Function to clear the displayed artworks
+            function clearArtworks() {
+                const artworksContainer = d3.select("#artworksContainer");
+                artworksContainer.html(""); // Clear the container
+            }
+
+            // Function to get unique artist names
+            function getUniqueArtists(data) {
+                const artistSet = new Set();
+                data.forEach(function (d) {
+                    artistSet.add(d.attribution);
+                });
+                return Array.from(artistSet);
+            }
+
+            // Function to analyze themes and populate related titles
+            function analyzeThemes(data) {
+                data.forEach(function (d) {
+                    const title = d.title.toLowerCase();
+
+                    if (title.includes('ocean') || title.includes('sea ') || title.includes('lake') || title.includes('boat')) {
+                        oceanRelatedTitles.push(d.title);
+                    }
+
+                    if (title.includes('sun')) {
+                        sunRelatedTitles.push(d.title);
+                    }
+                });
+
+                // Populate the titles for the initial theme
+                const selectedTheme = $("#themeSelect").val();
+                updateThemeArtworks(selectedTheme);
+            }
+
+            // Event listener for theme selection
+            $("#themeSelect").on("change", function () {
+                const selectedTheme = $(this).val();
+                updateThemeArtworks(selectedTheme);
+            });
+
+            // Function to update and display theme-related artworks
+            function updateThemeArtworks(theme) {
+                const themeArtworksContainer = d3.select("#artworksContainer");
+                themeArtworksContainer.html(""); // Clear previous content
+
+                let themeArtworks = [];
+
+                if (theme === "ocean") {
+                    themeArtworks = artistData.filter(d => oceanRelatedTitles.includes(d.title));
+                } else if (theme === "sun") {
+                    themeArtworks = artistData.filter(d => sunRelatedTitles.includes(d.title));
+                }
+
+                const div = themeArtworksContainer
+                    .append("div")
+                    .style("display", "flex"); // Add a flex container for images
+
+                const images = div
+                    .selectAll("img")
+                    .data(themeArtworks)
+                    .enter()
+                    .append("img")
+                    .attr("src", function (d) {
+                        return d.iiifthumburl;
+                    })
+                    .attr("alt", function (d) {
+                        return d.title;
+                    })
+                    .on("click", function (d) {
+                        alert("Image URL: " + d.iiifthumburl);
+                    });
+
+                // Apply the 'no-location' class with reduced opacity
+                images.classed("no-location", function (d) {
+                    return d.locationid === "NA";
+                });
+
+                // Event listener for images with 'no-location' class
+                images.filter(".no-location")
+                    .style("opacity", 0.3);
+            }
+
+            // Call the function to populate artworks based on the initial theme
+            updateThemeArtworks($("#themeSelect").val());
+
+        </script>
+</body>
+
+</html>

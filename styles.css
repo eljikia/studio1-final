@@ -1,0 +1,20 @@
+.greyed-out {
+    color: #888;
+}
+
+.artwork {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+}
+
+.artwork img {
+    margin: 0 10px;
+    max-height: 100px;
+}
+
+#artworksContainer {
+    display: flex;
+    overflow-x: auto;
+    white-space: nowrap;
+}
