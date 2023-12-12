@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>CSV to Typeahead Input with Artworks, Locations, and Images</title>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <style>
+        .greyed-out {
+            color: #888;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Typeahead Input for Artists with Artworks, Locations, and Images</h1>
+    <input type="text" id="artistInput" list="artistList" placeholder="Type artist name">
+    <datalist id="artistList"></datalist>
+    <div id="artworksContainer"></div>
+
+    <script>
+        var artistData; // Variable to store CSV data for artists
+        var locationsData; // Variable to store CSV data for locations
+        var imagesData; // Variable to store CSV data for images
+
+        // Step 1: Load the CSV data for artists
+        d3.csv("objects.csv").then(function (data) {
+            artistData = data;
+            populateDatalist(artistData);
+        });
+
+        // Step 2: Load the CSV data for locations
+        d3.csv("locations.csv").then(function (data) {
+            locationsData = data;
+        });
+
+        // Step 3: Load the CSV data for images
+        d3.csv("published_images.csv").then(function (data) {
+            imagesData = data;
+        });
+
+        // Step 4: Function to populate the datalist with unique artist names
+        function populateDatalist(data) {
+            var uniqueArtists = getUniqueArtists(data);
+            var datalist = d3.select("#artistList");
+
+            datalist.html(""); // Clear previous options
+
+            uniqueArtists.forEach(function (artist) {
+                datalist
+                    .append("option")
+                    .attr("value", artist);
+            });
+        }
+
+        // Step 5: Function to get unique artist names
+        function getUniqueArtists(data) {
+            var artistSet = new Set();
+            data.forEach(function (d) {
+                artistSet.add(d.attribution);
+            });
+            return Array.from(artistSet);
+        }
+
+        // Step 6: Event listener to update input field and display artworks
+        d3.select("#artistInput").on("input", function () {
+            var inputText = this.value.toLowerCase();
+            var selectedArtist = artistData.find(function (d) {
+                return d.attribution.toLowerCase() === inputText;
+            });
+
+            if (selectedArtist) {
+                displayArtworks(selectedArtist);
+            } else {
+                clearArtworks();
+            }
+        });
+
+        // Step 7: Function to display artworks by the selected artist
+        function displayArtworks(artist) {
+            var artworksContainer = d3.select("#artworksContainer");
+            artworksContainer.html(""); // Clear previous content
+
+            var artworks = artistData.filter(function (d) {
+                return d.attribution === artist.attribution;
+            });
+
+            artworksContainer
+                .append("h2")
+                .text("Artworks by " + artist.attribution);
+
+            var ul = artworksContainer
+                .append("ul")
+                .selectAll("li")
+                .data(artworks)
+                .enter()
+                .append("li");
+
+            ul.append("span")
+                .text(function (d) {
+                    return d.title;
+                })
+                .classed("greyed-out", function (d) {
+                    return !d.locationid;
+                });
+
+            ul.append("span")
+                .text(function (d) {
+                    return d.locationid
+                        ? getLocationInfo(d.locationid)
+                        : "";
+                });
+
+            ul.append("img")
+                .attr("src", function (d) {
+                    return getImageUrl(d.objectid);
+                })
+                .attr("alt", function (d) {
+                    return d.title;
+                })
+                .attr("height", 100);
+        }
+
+        // Step 8: Function to get the site and room info for a locationid
+        function getLocationInfo(locationid) {
+            var location = locationsData.find(function (d) {
+                return d.locationid === locationid;
+            });
+
+            if (location) {
+                return location.site + " - " + location.room;
+            } else {
+                return "Location not found";
+            }
+        }
+
+        // Step 9: Function to get the image URL based on objectid
+        function getImageUrl(objectid) {
+            var selectedArtwork = artistData.find(function (d) {
+                return d.objectid === objectid;
+            });
+
+            if (selectedArtwork) {
+                var depictsmsobjectid = selectedArtwork.depictsmsobjectid;
+                var image = imagesData.find(function (d) {
+                    console.log(d);
+                    return d.depictsmsobjectid === objectid;
+                });
+
+                if (image) {
+                    return image.iiifthumburl;
+                }
+            }
+            return ""; // Return an empty string if no image found or no matching objectid found
+        }
+
+        // Step 10: Function to clear the displayed artworks
+        function clearArtworks() {
+            var artworksContainer = d3.select("#artworksContainer");
+            artworksContainer.html(""); // Clear the container
+        }
+    </script>
+</body>
+
+</html>
