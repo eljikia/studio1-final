@@ -17,4 +17,86 @@
     display: flex;
     overflow-x: auto;
     white-space: nowrap;
+    margin-top: -140px;
+
+
+
+}
+
+.selected-room {
+    fill: yellow;
+    /* You can change the color as needed */
+    opacity: 1;
+    /* Ensure full opacity for selected rooms */
+}
+
+.no-location {
+    opacity: 0.3;
+}
+
+#connectingLine {
+    visibility: hidden;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+}
+
+h1 {
+    text-align: left;
+    margin-top: 20px;
+    margin-left: 30px;
+    font-family: 'League Gothic', sans-serif;
+    letter-spacing: 1.5px;
+    font-size: 70px;
+
+}
+
+.container {
+    max-width: 00px;
+    margin: 0 auto;
+}
+
+.black-rectangle {
+    background-color: #e2e2e2;
+    /* Set the background color to black */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 90%;
+    z-index: -1;
+    /* Move the rectangle behind other elements */
+}
+
+.artist-select {
+    width: 15%;
+    position: absolute;
+    top: 40px;
+    /* Adjust this value to move the dropdown up */
+    right: 290px;
+    /* Adjust this value to move the dropdown to the right */
+    z-index: 1;
+}
+
+.select2 {
+    width: 15%;
+    position: absolute;
+    top: 40px;
+    /* Adjust this value to move the dropdown up */
+    right: 290px;
+    /* Adjust this value to move the dropdown to the right */
+    z-index: 1;
+    visibility: hidden;
+}
+
+.theme-select {
+    width: 15%;
+    position: absolute;
+    top: 40px;
+    /* Adjust this value to move the dropdown up */
+    right: 50px;
+    /* Adjust this value to move the dropdown to the right */
+    z-index: 1;
 }

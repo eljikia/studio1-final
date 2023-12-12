@@ -10,6 +10,8 @@ d3.csv("final_table.csv").then(function (data) {
     artistData = data;
     populateArtistDropdown(artistData);
     analyzeThemes(artistData);  // Call analyzeThemes with the loaded data
+    displayArtworks(artist)
+
 });
 // Step 2: Function to populate the artist dropdown with unique names
 function populateArtistDropdown(data) {
@@ -26,13 +28,28 @@ function populateArtistDropdown(data) {
         const selectedArtist = e.params.data.id;
         const artist = artistData.find(function (d) {
             return d.attribution === selectedArtist;
+
         });
 
         if (artist) {
             displayArtworks(artist);
+            console.log("Selected Artist:", artist);
+
+
         } else {
             clearArtworks();
+            console.log("Artist not found in artistData:");
         }
+
+        // if (artist) {
+        //     console.log("Selected Artist:", artist);
+        //     // Log the room associated with the selected artist
+        //     console.log("Room Associated with the Artist:", artist.room);
+        //     // Additional functions can be called here as needed
+        // } else {
+        //     console.log("Artist not found in artistData:", selectedArtist);
+        //     clearArtworks();
+        // }
     });
 
     // Event listener for clearing selection
@@ -48,6 +65,7 @@ function getUniqueArtists(data) {
         artistSet.add(d.attribution);
     });
     return Array.from(artistSet);
+
 }
 
 // Step 4: Event listener to update input field and display artworks
@@ -59,13 +77,21 @@ d3.select("#artistInput").on("input", function () {
 
     if (selectedArtist) {
         displayArtworks(selectedArtist);
+        console.log("Selected Artist:", artist);
+
     } else {
         clearArtworks();
     }
+
 });
 
-// Step 6: Function to display artworks by the selected artist
+
+
+// ... (your existing code)
+
 function displayArtworks(artist) {
+    console.log("Displaying artworks for artist:", artist);
+
     const artworksContainer = d3.select("#artworksContainer");
     artworksContainer.html(""); // Clear previous content
 
@@ -100,13 +126,30 @@ function displayArtworks(artist) {
     // Event listener for images with 'no-location' class
     images.filter(".no-location")
         .style("opacity", 0.3);
+
+    // Highlight the corresponding rectangle based on the selected room
+    artworks.forEach(function (artwork) {
+        const selectedRoom = artwork.room;
+        if (selectedRoom) {
+            // Remove existing classes
+            d3.selectAll(".selected-room").classed("selected-room", false);
+
+            // Add class to highlight the selected room
+            d3.select(`#${selectedRoom} rect`).classed("selected-room", true);
+        }
+        console.log("Selected Room:", selectedRoom);
+    });
 }
 
-// Step 8: Function to clear the displayed artworks
-function clearArtworks() {
-    const artworksContainer = d3.select("#artworksContainer");
-    artworksContainer.html(""); // Clear the container
-}
+
+// // Step 8: Function to clear the displayed artworks
+// function clearArtworks() {
+//     const artworksContainer = d3.select("#artworksContainer");
+//     artworksContainer.html(""); // Clear the container
+
+//     // Reset the fill color of all rectangles to the default color
+//     d3.selectAll("rect").attr("fill", "black");
+// }
 
 function analyzeThemes(data) {
     // Check if data is available
@@ -135,3 +178,5 @@ function analyzeThemes(data) {
     const topThemes = themes.slice(0, 10);
     console.log('Top 10 Themes:', topThemes);
 }
+
+
