@@ -28,7 +28,7 @@
 
 
                 .cls-4 {
-                    fill: none;
+                    fill: black;
                     stroke-linecap: round;
                     stroke-linejoin: round;
                     stroke-width: .71px;
@@ -37,9 +37,9 @@
                 .cls-4,
             </style>
         </defs>
-        <!-- <g id="BACKGROUND">
-            <rect class="cls-4" x="56.5" y="327.46" width="1801" height="840" />
-        </g> -->
+        <g id="BACKGROUND">
+            <rect class="cls-4" x="56.5" y="327.46" width="1801" height="1200" />
+        </g>
 
         <g id="Base_layer" data-name="Base layer">
             <g id="LINE">
@@ -471,7 +471,9 @@
                 .cls-2
             </style>
         </defs>
-
+        <g id="BACKGROUND">
+            <rect class="cls-4" x="56.5" y="327.46" width="1801" height="840" />
+        </g>
         <g id="base_layer_gf" data-name="base layer gf">
             <rect class="cls-1" x="248.81" y="597.51" width="2.49" height="19.57" />
             <rect class="cls-1" x="249.05" y="597.75" width="2.01" height="19.09" />
@@ -718,9 +720,7 @@
         <g id="G-043">
             <rect class="cls-2" x="802" y="672.96" width="72" height="72" />
         </g>
-        <!-- <g id="BACKGROUND">
-            <rect class="cls-4" x="56.5" y="327.46" width="1801" height="840" />
-        </g> -->
+
     </svg>
     </svg>
     <!-- <object data="floorplan.svg" width="300" height="400"> </object> -->
@@ -746,6 +746,8 @@
 
     </div>
     <div id="artworksContainer"></div>
+    <div id="roomListContainer"></div>
+
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     <script src="https://d3js.org/d3.v5.min.js"></script>
@@ -772,6 +774,9 @@
                 console.error("Starting room with id 'M-010' not found.");
             }
         });
+
+        // Function to flip viewBox parameters if the room ID starts with 'G'
+
 
         // Function to populate the artist dropdown with unique names
         function populateArtistDropdown(data) {
@@ -981,6 +986,7 @@
                 // Calculate estimated time
                 const artworksNotGreyedOut = artworks.filter(d => d.locationid !== "NA").length;
 
+
                 console.log('Artworks:', artworksNotGreyedOut);
                 const estimatedTime = Math.round((pathLength / 10) * 2.5 + 60 * artworksNotGreyedOut) / 60;
 
@@ -990,18 +996,24 @@
                     .append("div")
                     .attr("id", "estimatedTimeContainer")
                     .style("position", "absolute")
-                    .style("top", "30px")
-                    .style("left", "600px")
+                    .style("top", "20px")
+                    .style("left", "650px")
                     .style("padding", "10px")
+                    // .style("color", "#0000FF")
+                    .style("font-family", "'League Gothic', sans-serif")
+                    .style("font-size", "30px")
                 // .style("background-color", "white")
                 // .style("border", "1px solid black");
 
                 estimatedTimeContainer.append("div")
-                    .text("Total Estimated Time:")
-                    .style("font-weight", "bold");
+                    .text("TOTAL ESTIMATED TIME")
+                    .style("font-weight", "bold")
+                    .style("color", "#ed7865");
 
                 estimatedTimeContainer.append("div")
-                    .text(`${estimatedTime.toFixed()} Minutes`);
+                    .text(`${estimatedTime.toFixed()} MINUTES`)
+                    .style("color", "#0000FF")
+                    .style("padding", "-55px");
 
                 // Return the calculated estimated time
                 return estimatedTime;
@@ -1028,9 +1040,51 @@
                     return words.join(' ');
                 }
 
+
             }
 
+            // Check if the room ID starts with "G" and flip the viewBox parameters
+            function flipViewBoxIfG(roomId, viewBox) {
+                if (roomId.startsWith("G")) {
+                    const [x, y, width, height] = viewBox.split(" ").map(Number);
+                    return `${-x - width} ${y} ${width} ${height}`;
+                }
+                return viewBox;
+            }
+            d3.select("#descriptionsContainer").html("");
+
+            const artworksNotGreyedOut = artistData.filter(d => d.attribution === artist.attribution && d.locationid !== "NA");
+
+            const uniqueDescriptions = [...new Set(artworksNotGreyedOut.map(d => d.description))];
+
+            // Check if descriptionsContainer already exists; if not, create it
+            let descriptionsContainer = d3.select("#descriptionsContainer");
+
+            if (descriptionsContainer.empty()) {
+                descriptionsContainer = d3.select("body")
+                    .append("div")
+                    .attr("id", "descriptionsContainer")
+                    .style("position", "absolute")
+                    .style("top", "150px")
+                    .style("left", "65%")  // Adjust this value to position it as desired
+                    .style("padding", "10px");
+            }
+
+            descriptionsContainer.selectAll("p")
+                .data(uniqueDescriptions)
+                .enter()
+                .append("p")
+                .text(d => removeFirstWord(d));
         }
+
+        // Function to remove the first word from a string
+        function removeFirstWord(description) {
+            const words = description.split(' ');
+            words.shift();  // Remove the first word
+            return words.join(' ');
+        }
+
+
 
         // Function to get unique artist names
         function getUniqueArtists(data) {
@@ -1070,6 +1124,18 @@
         // Function to update and display theme-related artworks
         // Function to update and display theme-related artworks
         function updateThemeArtworks(theme) {
+
+            // Function to display artworks by the selected artist
+            function displayArtworks(artist) {
+                console.log("Displaying artworks for artist:", artist);
+
+                const artworksContainer = d3.select("#artworksContainer");
+                artworksContainer.html(""); // Clear previous content
+
+                const artworks = artistData.filter(function (d) {
+                    return d.attribution === artist.attribution;
+                });
+            }
             const themeArtworksContainer = d3.select("#artworksContainer");
             themeArtworksContainer.html(""); // Clear previous content
 
@@ -1141,64 +1207,142 @@
             } else {
                 console.error("Starting room with id 'G-010' not found.");
             }
-        }
 
 
 
-        // Function to create path data from a specific starting point to multiple rooms
-        function createPathBetweenRooms(startX, startY, rooms) {
-            // Get the existing path or create a new one
-            let path = d3.select('#connectingLine');
+            // Function to get theme-related artworks
+            function getThemeArtworks(theme) {
+                let themeArtworks = [];
 
-            // Check if the path already exists
-            if (path.empty()) {
-                // Append a new path to the SVG
-                path = d3.select('svg')
-                    .append('path')
-                    .attr('id', 'connectingLine')
-                    .attr('stroke', 'blue') // Set the stroke color
-                    .attr('stroke-width', 4) // Set the stroke width
-                    .attr('fill', 'none') // Set fill to none if you want just a line
-                    .attr('stroke-dasharray', '4 4'); // Set dash array for a dotted line
-            }
-
-            // Toggle the visibility of the path
-            path.style('visibility', 'visible');
-
-            let pathData = `M${startX},${startY}`;
-            let endX = startX;
-            let endY = startY;
-
-            rooms.forEach(room => {
-                const roomX = +room.getAttribute('x') + (+room.getAttribute('width') / 2);
-                const roomY = +room.getAttribute('y') + (+room.getAttribute('height') / 2);
-
-                const deltaX = Math.abs(endX - roomX);
-                const deltaY = Math.abs(endY - roomY);
-
-                // Determine whether to add horizontal or vertical segments based on the shortest distance
-                if (deltaX <= deltaY) {
-                    // Add horizontal line segment
-                    pathData += ` L${roomX},${endY}`;
-                } else {
-                    // Add vertical line segment
-                    pathData += ` L${endX},${roomY}`;
+                if (theme === "ocean") {
+                    themeArtworks = artistData.filter(d => oceanRelatedTitles.includes(d.title));
+                } else if (theme === "sun") {
+                    themeArtworks = artistData.filter(d => sunRelatedTitles.includes(d.title));
                 }
 
-                // Add line segment to the room
-                pathData += ` L${roomX},${roomY}`;
+                return themeArtworks;
 
-                // Update end coordinates for the next iteration
-                endX = roomX;
-                endY = roomY;
-            });
 
-            // Update the path with the new data
-            path.attr('d', pathData);
+            }
+
+
+
+
+
+            // Function to create path data from a specific starting point to multiple rooms
+            // Function to create path data from a specific starting point to multiple rooms
+            function createPathBetweenRooms(startX, startY, rooms, artworks) {
+                // Get the existing path or create a new one
+                let path = d3.select('#connectingLine');
+
+                // Check if the path already exists
+                if (path.empty()) {
+                    // Append a new path to the SVG
+                    path = d3.select('svg')
+                        .append('path')
+                        .attr('id', 'connectingLine')
+                        .attr('stroke', 'blue') // Set the stroke color
+                        .attr('stroke-width', 4) // Set the stroke width
+                        .attr('fill', 'none') // Set fill to none if you want just a line
+                        .attr('stroke-dasharray', '4 4'); // Set dash array for a dotted line
+                }
+
+                // Toggle the visibility of the path
+                path.style('visibility', 'visible');
+
+                let pathData = `M${startX},${startY}`;
+                let endX = startX;
+                let endY = startY;
+
+                rooms.forEach(room => {
+                    const roomX = +room.getAttribute('x') + (+room.getAttribute('width') / 2);
+                    const roomY = +room.getAttribute('y') + (+room.getAttribute('height') / 2);
+
+                    const deltaX = Math.abs(endX - roomX);
+                    const deltaY = Math.abs(endY - roomY);
+
+                    // Determine whether to add a horizontal or vertical segment based on the shortest distance
+                    if (deltaX <= deltaY) {
+                        // Add a horizontal line segment
+                        pathData += ` L${roomX},${endY}`;
+                    } else {
+                        // Add a vertical line segment
+                        pathData += ` L${endX},${roomY}`;
+                    }
+
+                    // Add a line segment to the room
+                    pathData += ` L${roomX},${roomY}`;
+
+                    // Update end coordinates for the next iteration
+                    endX = roomX;
+                    endY = roomY;
+                });
+
+                // Update the path with the new data
+                path.attr('d', pathData);
+
+                const pathLength = path.node().getTotalLength();
+                console.log('Path Length:', pathLength);
+                // Calculate estimated time
+                const artworksNotGreyedOut = artworks.filter(d => d.locationid !== "NA").length;
+
+                console.log('Artworks:', artworksNotGreyedOut);
+                const estimatedTime = Math.round((pathLength / 10) * 2.5 + 60 * artworksNotGreyedOut) / 60;
+
+                // Display estimated time in a text div
+                d3.select("#estimatedTimeContainer").remove(); // Remove existing container
+                const estimatedTimeContainer = d3.select("body")
+                    .append("div")
+                    .attr("id", "estimatedTimeContainer")
+                    .style("position", "absolute")
+                    .style("top", "20px")
+                    .style("left", "650px")
+                    .style("padding", "10px")
+                    // .style("color", "#0000FF")
+                    .style("font-family", "'League Gothic', sans-serif")
+                    .style("font-size", "30px")
+                // .style("background-color", "white")
+                // .style("border", "1px solid black");
+
+                estimatedTimeContainer.append("div")
+                    .text("TOTAL ESTIMATED TIME")
+                    .style("font-weight", "bold")
+                    .style("color", "#ed7865");
+
+                estimatedTimeContainer.append("div")
+                    .text(`${estimatedTime.toFixed()} MINUTES`)
+                    .style("color", "#0000FF")
+                    .style("padding", "-55px");
+
+                // Return the calculated estimated time
+                return estimatedTime;
+
+                const descriptionsContainer = d3.select("body")
+                    .append("div")
+                    .attr("id", "descriptionsContainer")
+                    .style("position", "absolute")
+                    .style("top", "10px")
+                    .style("left", "80%")  // Adjust this value to position it as desired
+                    .style("padding", "10px");
+
+                descriptionsContainer.selectAll("p")
+                    .data(artworksNotGreyedOut)
+                    .enter()
+                    .append("p")
+                    .text(d => removeFirstWord(d.description));
+
+
+                // Function to remove the first word from a string
+                function removeFirstWord(description) {
+                    const words = description.split(' ');
+                    words.shift();  // Remove the first word
+                    return words.join(' ');
+                }
+
+            }
+            // Call the function to populate artworks based on the initial theme
+            updateThemeArtworks($("#themeSelect").val());
         }
-        // Call the function to populate artworks based on the initial theme
-        updateThemeArtworks($("#themeSelect").val());
-
 
     </script>
 </body>
